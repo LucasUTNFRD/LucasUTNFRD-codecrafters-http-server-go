@@ -2,11 +2,11 @@ package server
 
 import (
 	"bufio"
+	"github.com/codecrafters-io/http-server-starter-go/app/internal/response"
 	"log"
 	"net"
-
-	"github.com/codecrafters-io/http-server-starter-go/app/internal/request"
-	"github.com/codecrafters-io/http-server-starter-go/app/internal/response"
+	"net/http"
+	"strings"
 )
 
 func HandleConnection(conn net.Conn) {
@@ -18,16 +18,20 @@ func HandleConnection(conn net.Conn) {
 	}(conn)
 
 	reader := bufio.NewReader(conn)
-	req, err := request.ParseRequest(reader)
+	req, err := http.ReadRequest(reader)
 	if err != nil {
-		log.Println("Error parsing request:", err)
-		return
+		log.Println(err)
 	}
+	responseWriter := response.NewCustomResponseWriter(conn)
 
-	res := response.NewResponse(req)
-	log.Println("response", *res)
-	err = res.SendResponse(conn)
-	if err != nil {
-		log.Println("Error sending response:", err)
+	switch {
+	case req.URL.Path == "/":
+		rootHandler(responseWriter, req)
+	case strings.HasPrefix(req.URL.Path, "/echo/"):
+		echoHandler(responseWriter, req)
+	case strings.HasPrefix(req.URL.Path, "/user-agent"):
+		userAgentHandler(responseWriter, req)
+	default:
+		http.NotFound(responseWriter, req)
 	}
 }
