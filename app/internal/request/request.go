@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -69,7 +70,6 @@ func ParseRequest(reader *bufio.Reader) (*Request, error) {
 		}
 		req.Body = body
 	}
-
+	log.Println(*req)
 	return req, nil
 }
-

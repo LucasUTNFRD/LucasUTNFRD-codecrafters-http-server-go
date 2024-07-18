@@ -25,6 +25,7 @@ func HandleConnection(conn net.Conn) {
 	}
 
 	res := response.NewResponse(req)
+	log.Println("response", *res)
 	err = res.SendResponse(conn)
 	if err != nil {
 		log.Println("Error sending response:", err)

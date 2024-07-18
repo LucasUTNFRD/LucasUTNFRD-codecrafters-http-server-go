@@ -2,10 +2,10 @@ package response
 
 import (
 	"fmt"
+	"github.com/codecrafters-io/http-server-starter-go/app/internal/request"
 	"net"
 	"strconv"
-
-	"github.com/codecrafters-io/http-server-starter-go/app/internal/request"
+	"strings"
 )
 
 const CRLF = "\r\n"
@@ -27,10 +27,20 @@ func NewResponse(req *request.Request) *Response {
 	var message string
 	var body string
 
-	if req.Path == "/" {
+	//TODO:
+	//You must reply 200 OK to /
+	//You must reply 200 OK to /echo/abc and return content
+	//You must reply 404 Not Found to anything else
+
+	switch {
+	case strings.Contains(req.Path, "/echo/"):
 		status = OK
 		message = "OK"
-	} else {
+		body = strings.TrimPrefix(req.Path, "/echo/")
+	case req.Path == "/":
+		status = OK
+		message = "OK"
+	default:
 		status = NotFound
 		message = "Not Found"
 	}
