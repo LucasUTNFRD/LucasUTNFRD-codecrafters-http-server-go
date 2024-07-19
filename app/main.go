@@ -1,16 +1,21 @@
 package main
 
 import (
-	"fmt"
+	"flag"
 	"github.com/codecrafters-io/http-server-starter-go/app/internal/server"
 	"log"
 	"net"
+	"os"
 )
 
-//TODO refactor code and divide it into different files
-
+// TODO implement /file/{filename} endpoint
 func main() {
-	fmt.Println("Logs from your program will appear here!")
+	dirPtr := flag.String("directory", "/tmp/", "specify directory for files")
+	flag.Parse()
+
+	if _, err := os.Stat(*dirPtr); os.IsNotExist(err) {
+		log.Fatalf("directory does not exist: %s", *dirPtr)
+	}
 
 	l, err := net.Listen("tcp", "0.0.0.0:4221")
 	if err != nil {
@@ -23,6 +28,6 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		go server.HandleConnection(conn)
+		go server.HandleConnection(conn, *dirPtr)
 	}
 }

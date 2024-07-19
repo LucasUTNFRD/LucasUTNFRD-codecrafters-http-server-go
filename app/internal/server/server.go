@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func HandleConnection(conn net.Conn) {
+func HandleConnection(conn net.Conn, dir string) {
 	defer func(conn net.Conn) {
 		err := conn.Close()
 		if err != nil {
@@ -27,6 +27,8 @@ func HandleConnection(conn net.Conn) {
 	switch {
 	case req.URL.Path == "/":
 		rootHandler(responseWriter, req)
+	case strings.HasPrefix(req.URL.Path, "/files/"):
+		fileHandler(responseWriter, req, dir)
 	case strings.HasPrefix(req.URL.Path, "/echo/"):
 		echoHandler(responseWriter, req)
 	case strings.HasPrefix(req.URL.Path, "/user-agent"):
