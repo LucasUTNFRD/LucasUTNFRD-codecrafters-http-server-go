@@ -26,7 +26,13 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	message := strings.TrimPrefix(r.URL.Path, "/echo/")
+
 	w.Header().Set("Content-Type", "text/plain")
+	//TODO add support for the Accept-Encoding and Content-Encoding headers.
+	acceptEncoding := r.Header.Get("Accept-Encoding")
+	if strings.Contains(acceptEncoding, "gzip") {
+		w.Header().Set("Content-Encoding", "gzip")
+	}
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(message)))
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, message)
