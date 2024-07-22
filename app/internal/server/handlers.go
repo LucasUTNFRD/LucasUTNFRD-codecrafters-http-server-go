@@ -1,6 +1,7 @@
 package server
 
 import (
+	"compress/gzip"
 	"fmt"
 	"io"
 	"log"
@@ -20,6 +21,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "OK")
 }
 
+// Check r.TransferEnconding()
 func echoHandler(w http.ResponseWriter, r *http.Request) {
 	if !strings.HasPrefix(r.URL.Path, "/echo/") {
 		http.NotFound(w, r)
@@ -27,12 +29,38 @@ func echoHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	message := strings.TrimPrefix(r.URL.Path, "/echo/")
 
-	w.Header().Set("Content-Type", "text/plain")
 	//TODO add support for the Accept-Encoding and Content-Encoding headers.
+	//TODO add support for gzip compression
 	acceptEncoding := r.Header.Get("Accept-Encoding")
 	if strings.Contains(acceptEncoding, "gzip") {
+		// Create a buffer to hold the compressed data
+		var buf strings.Builder
+		gzipBufWriter := gzip.NewWriter(&buf)
+
+		// Write the message to the gzip buffer
+		_, err := gzipBufWriter.Write([]byte(message))
+		if err != nil {
+			http.Error(w, "Failed to compress data", http.StatusInternalServerError)
+			return
+		}
+		gzipBufWriter.Close()
+
+		// Set headers before writing to the response writer
 		w.Header().Set("Content-Encoding", "gzip")
+		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", buf.Len()))
+		w.WriteHeader(http.StatusOK)
+
+		// Write the compressed data to the response writer
+		_, err = w.Write([]byte(buf.String()))
+		if err != nil {
+			http.Error(w, "Failed to write response", http.StatusInternalServerError)
+			return
+		}
+		return
 	}
+	//default response
+	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", len(message)))
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprint(w, message)
